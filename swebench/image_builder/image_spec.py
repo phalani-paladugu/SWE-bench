@@ -27,7 +27,7 @@ class ImageSpec:
             raise ValueError("dockerfile cannot be empty")
         if self.arch not in ["amd64", "arm64"]:
             raise ValueError(
-                f"Invalid architecture: {self.arch}. Must be 'x86_64' or 'arm64'"
+                f"Invalid architecture: {self.arch}. Must be 'amd64' or 'arm64'"
             )
         if self.namespace is not None and not self.namespace:
             raise ValueError("namespace cannot be empty string if provided")
@@ -67,6 +67,7 @@ def get_image_specs_from_dataset(
     dockerfiles: dict[str, str],
     namespace: Optional[str] = None,
     tag: str = "latest",
+    arch: str = "amd64",
 ) -> list[ImageSpec]:
     """
     Idempotent function that converts a list of SWEbenchInstance objects to a list of ImageSpec objects.
@@ -76,11 +77,12 @@ def get_image_specs_from_dataset(
         dockerfiles: Dict mapping instance_id to Dockerfile content.
         namespace: Docker registry namespace.
         tag: Docker image tag.
+        arch: Target architecture, either amd64 (default) or arm64.
     """
     if isinstance(dataset[0], ImageSpec):
         return cast(list[ImageSpec], dataset)
     return [
-        make_image_spec(x, dockerfiles[x["instance_id"]], namespace, tag)
+        make_image_spec(x, dockerfiles[x["instance_id"]], namespace, tag, arch=arch)
         for x in cast(list[SWEbenchInstance], dataset)
     ]
 
@@ -90,6 +92,7 @@ def make_image_spec(
     dockerfile: str,
     namespace: Optional[str] = None,
     tag: str = "latest",
+    arch: str = "amd64",
 ) -> ImageSpec:
     """
     Create an ImageSpec from a SWEbenchInstance for image building purposes.
@@ -99,6 +102,7 @@ def make_image_spec(
         dockerfile: Dockerfile content string (pre-generated).
         namespace: Docker registry namespace.
         tag: Docker image tag.
+        arch: Target architecture, either amd64 (default) or arm64.
     """
     if isinstance(instance, ImageSpec):
         return instance
@@ -109,4 +113,5 @@ def make_image_spec(
         dockerfile=dockerfile,
         namespace=namespace,
         tag=tag,
+        arch=arch,
     )

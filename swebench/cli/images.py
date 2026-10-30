@@ -1,8 +1,15 @@
 """`swebench images` — build, check and clean instance images."""
 
+from enum import Enum
 from typing import Optional
 
 import typer
+
+
+class ImageArchitecture(str, Enum):
+    amd64 = "amd64"
+    arm64 = "arm64"
+
 
 images_app = typer.Typer(
     name="images",
@@ -31,6 +38,9 @@ def build(
     tag: str = typer.Option("latest", "--tag"),
     dry_run: bool = typer.Option(False, "--dry-run", help="List what would be built"),
     open_file_limit: int = typer.Option(4096, "--open-file-limit"),
+    arch: ImageArchitecture = typer.Option(
+        ImageArchitecture.amd64, "--arch", help="Target image architecture"
+    ),
 ):
     """Build images ahead of an evaluation, from a task repo.
 
@@ -44,6 +54,8 @@ def build(
         swebench images build ~/swe-bench-multimodal-tasks -i carbon-design-system__carbon-10188
 
         swebench images build ~/swe-bench-tasks --dry-run
+
+        swebench images build ~/swe-bench-tasks -i astropy__astropy-13236 --arch arm64
     """
     from swebench.image_builder.prepare_images import main as prepare_images
     from swebench.task.publish import CheckFailed
@@ -60,6 +72,7 @@ def build(
             namespace=namespace,
             tag=tag,
             dry_run=dry_run,
+            arch=arch.value,
         )
     except (CheckFailed, UnknownDataset) as e:
         typer.echo(str(e), err=True)

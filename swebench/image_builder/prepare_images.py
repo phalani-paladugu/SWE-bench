@@ -74,7 +74,7 @@ def resolve_task_repo(task_repo: str):
             if result.returncode == 0:
                 break
             if i < len(clone_urls) - 1:
-                print(f"Clone failed, trying next URL...")
+                print("Clone failed, trying next URL...")
             else:
                 raise RuntimeError(
                     f"Failed to clone task repo. Last error:\n{result.stderr}"
@@ -112,6 +112,7 @@ def main(
     namespace,
     tag,
     dry_run,
+    arch="amd64",
 ):
     """
     Build Docker images for the tasks in a task repo.
@@ -126,6 +127,7 @@ def main(
         namespace (str): Docker registry namespace.
         tag (str): Docker image tag.
         dry_run (bool): If True, create docker files and build contexts but don't build images.
+        arch (str): Target architecture, either amd64 (default) or arm64.
     """
     # Set open file limit
     resource.setrlimit(resource.RLIMIT_NOFILE, (open_file_limit, open_file_limit))
@@ -135,7 +137,9 @@ def main(
         guard(repo_path)
         dataset = select_tasks(repo_path, instance_ids, datasets)
         dockerfiles = load_dockerfiles(repo_path, [i["instance_id"] for i in dataset])
-    image_specs = get_image_specs_from_dataset(dataset, dockerfiles, namespace, tag)
+    image_specs = get_image_specs_from_dataset(
+        dataset, dockerfiles, namespace, tag, arch=arch
+    )
     image_specs = filter_image_specs(image_specs, client, force_rebuild)
 
     if len(image_specs) == 0:
@@ -203,5 +207,6 @@ if __name__ == "__main__":
         required=True,
         help="Task repo: local path, GitHub 'owner/repo', or 'https://github.com/owner/repo'",
     )
+    parser.add_argument("--arch", choices=["amd64", "arm64"], default="amd64")
     args = parser.parse_args()
     main(**vars(args))

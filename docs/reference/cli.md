@@ -53,11 +53,19 @@ with `-i`, which can name a task in an unpublished split.
 swebench images build ~/swe-bench-tasks -j 8
 swebench images build ~/swe-bench-multimodal-tasks -i carbon-design-system__carbon-10188
 swebench images build ~/swe-bench-tasks --dry-run
+swebench images build ~/swe-bench-tasks -i astropy__astropy-13236 --arch arm64
 
 swebench images check ~/swe-bench-tasks    # which images are missing from the registry
 swebench images push  ~/swe-bench-tasks    # publish them, under the names task.yaml declares
 swebench images clean --run-id my-run      # remove leftover containers
 ```
+
+`images build --arch arm64` targets `linux/arm64/v8` and names local images
+`sweb.eval.arm64.<instance_id>:<tag>`. The default `--arch amd64` keeps the existing
+`sweb.eval.x86_64.<instance_id>:<tag>` naming. Provide an ARM64-compatible
+`tasks/<instance_id>/Dockerfile` when selecting ARM64; the build command uses
+that file for either architecture. Set the task's `image` reference separately
+when publishing or evaluating an ARM64 image.
 
 `images check` is worth running before a long evaluation: it catches a stale or
 partially-pushed image set in seconds rather than one instance at a time.
